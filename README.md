@@ -42,13 +42,26 @@ python -c "import cupy as cp; print(f'GPU disponible: {cp.cuda.is_available()}')
 
 ## Uso
 
-### Ejecutar la aplicación
+## Ejecución
+
+Ejecuta la aplicación con:
 
 ```bash
-python duplicate_finder_gradio.py
+python duplicate_finder_gradio-v2.py
 ```
 
-La aplicación se abrirá en: `http://localhost:7860`
+La interfaz se abrirá en tu navegador, generalmente en [http://localhost:7860](http://localhost:7860).
+
+---
+
+## Interfaz de resultados
+
+La tabla de resultados ahora muestra los archivos duplicados organizados en grupos, con las siguientes características:
+
+- Visualización en árbol: cada grupo muestra el archivo prioritario y los archivos duplicados asociados.
+- Selección rápida: puedes marcar/desmarcar archivos por grupo o individualmente.
+- Filtros de selección: ⭐ Guardable, Otros, Todos, para facilitar la gestión de archivos.
+- Botón "Cargar Última Sesión": permite restaurar los resultados y selecciones de la sesión anterior, seleccionando de forma automática solo archivos de la categoría "OTROS".
 
 ### Uso básico
 
@@ -102,7 +115,7 @@ max_workers = min(4, (os.cpu_count() or 1) + 2)  # Reducir de 8 a 4
 Ejecuta con permisos de administrador o cambia permisos:
 
 ```bash
-sudo python duplicate_finder_gradio.py  # Linux
+sudo python duplicate_finder_gradio-V2.py  # Linux
 # o
 chmod +x delete_duplicates.sh  # Para scripts generados
 ```
