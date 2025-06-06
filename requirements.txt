@@ -1,0 +1,22 @@
+# Detector de Archivos Duplicados GPU - Requirements
+# Python >= 3.8 requerido
+
+# Interfaz web
+gradio>=4.0.0
+pandas>=1.5.0
+
+# Aceleración GPU (NVIDIA CUDA)
+cupy-cuda12x>=12.0.0  # Para CUDA 12.x
+# cupy-cuda11x>=11.0.0  # Descomenta para CUDA 11.x si es necesario
+
+# Utilidades de sistema
+pathlib2>=2.3.0
+numpy>=1.21.0
+
+# Opcional: para mejor rendimiento
+numba>=0.56.0
+psutil>=5.8.0
+
+# Desarrollo y depuración (opcional)
+# ipython>=8.0.0
+# jupyter>=1.0.0
