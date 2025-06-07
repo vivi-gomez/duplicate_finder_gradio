@@ -213,8 +213,8 @@ class DuplicateFinderGPU:
             if self.stop_flag:
                 break
                 
-            # Ordenar por fecha de modificación (más reciente primero)
-            files.sort(key=lambda x: x['mtime'], reverse=True)
+            # Ordenar por fecha de modificación (más antiguo primero)
+            files.sort(key=lambda x: x['mtime'], reverse=False)
             
             size = files[0]['size']
             wasted_space = size * (len(files) - 1)
@@ -506,7 +506,7 @@ echo "Después de eliminar los duplicados, los symlinks seguirán funcionando."
 '''
     
     # Guardar script
-    script_path = "create_symlinks.sh"
+    script_path = f"create_symlinks_{datetime.now().strftime('%Y%m%d')}.sh"
     with open(script_path, 'w') as f:
         f.write(script_content)
     
