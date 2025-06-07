@@ -258,6 +258,7 @@ finder = DuplicateFinderGPU()
 current_results = []
 group_selections = {}  # Para rastrear selecciones de grupos
 individual_selections = {}  # Para rastrear selecciones individuales
+sort_order_descending = True  # Para ordenar por tamaño
 
 def update_progress(progress, message):
     """Actualiza el progreso en la interfaz"""
@@ -424,12 +425,12 @@ def create_symlinks():
             for i, is_selected in enumerate(individual_selections[group_id]['duplicates']):
                 if is_selected and i < len(group['duplicate_files']):
                     duplicate_path = group['duplicate_files'][i]['path']
-                    symlink_path = str(duplicate_path) + '.symlink'
+                    symlink_path = str(duplicate_path)  # Use original filename for symlink
                     
                     try:
-                        # Eliminar symlink existente si existe
-                        if os.path.exists(symlink_path) or os.path.islink(symlink_path):
-                            os.unlink(symlink_path)
+                        # Eliminar archivo o symlink existente antes de crear el nuevo symlink
+                        if os.path.lexists(symlink_path): # Use lexists to also find broken symlinks
+                            os.remove(symlink_path)
                         
                         # Crear el symlink
                         os.symlink(priority_file, symlink_path)
@@ -552,7 +553,7 @@ echo "Archivos procesados: ''' + str(len(selected_files)) + '''"
 '''
     
     # Guardar script
-    script_path = "delete_duplicates.sh"
+    script_path = f"deleteduplicates_{datetime.now().strftime('%Y%m%d')}.sh"
     with open(script_path, 'w') as f:
         f.write(script_content)
     
@@ -647,6 +648,33 @@ def load_session(session_file):
         logger.error(f"Error cargando sesión: {e}")
         return f"❌ Error cargando sesión: {str(e)}", gr.update(visible=False), gr.update(visible=False)
 
+def sort_results_by_size():
+    """Ordena los resultados por tamaño y actualiza la vista."""
+    global current_results, sort_order_descending, group_selections, individual_selections, finder, GPU_AVAILABLE
+
+    if not current_results:
+        return gr.update(value="No hay resultados para ordenar."), "No hay resultados para ordenar."
+
+    current_results.sort(key=lambda x: x['size'], reverse=sort_order_descending)
+
+    # Actualizar los group_id para que coincidan con el nuevo orden
+    # Esto es crucial si el group_id se usa como índice directo en algún lado después del sort
+    # Sin embargo, group_selections and individual_selections son diccionarios usando group_id como clave,
+    # así que el group_id original debe preservarse o las selecciones se desajustarán.
+    # Por ahora, asumimos que el group_id es un identificador único y no un índice de lista.
+    # Si el group_id fuera un índice, necesitaríamos remapearlos después de ordenar,
+    # o asegurar que create_tree_display maneje los group_id originales correctamente.
+    # La implementación actual de create_tree_display usa group['group_id'] directamente.
+
+    sort_order_descending = not sort_order_descending  # Invertir para el próximo clic
+
+    new_html_content = create_tree_display(current_results, group_selections, individual_selections, finder, GPU_AVAILABLE)
+
+    order_message = "descendente" if not sort_order_descending else "ascendente" # Mensaje dice el orden que se aplicó
+    status_message = f"Resultados ordenados por tamaño ({order_message})."
+
+    return new_html_content, status_message
+
 def create_interface():
     """Crea la interfaz Gradio"""
     custom_css = get_custom_css()
@@ -660,13 +688,13 @@ def create_interface():
         # Usar los componentes del módulo UI
         components = create_interface_components()
         
-	# Desempaquetar componentes - CORREGIDO: ahora son 21 elementos
+	# Desempaquetar componentes - Actualizado para incluir sort_by_size_btn (22 elementos)
         (directory_input, min_size_input, analyze_btn, stop_btn, 
          status_output, results_group, select_all_btn,
-         select_priorities_btn, select_others_btn, generate_script_btn, 
-         create_symlinks_btn, export_symlinks_btn, delete_btn, 
-         selection_status, results_display, script_file, symlinks_file,
-         save_session_btn, load_session_btn, session_file, load_session_file) = components
+         select_priorities_btn, select_others_btn, sort_by_size_btn, # Botón añadido
+         generate_script_btn, create_symlinks_btn, export_symlinks_btn,
+         delete_btn, selection_status, results_display, script_file,
+         symlinks_file, save_session_btn, load_session_btn, session_file, load_session_file) = components
         
         # Event handlers
         analyze_btn.click(
@@ -740,6 +768,11 @@ def create_interface():
             fn=load_session,
             inputs=[load_session_file],
             outputs=[status_output, results_display, results_group]
+        )
+
+        sort_by_size_btn.click(
+            fn=sort_results_by_size,
+            outputs=[results_display, status_output]
         )
     
     return interface
