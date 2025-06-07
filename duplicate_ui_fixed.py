@@ -45,13 +45,13 @@ def create_tree_display(results, group_selections, individual_selections, finder
     html_content.append("""
     <div class="results-table">
         <div class="table-header">
-            <div class="header-cell group-col" id="name_sort_header" style="cursor: pointer;" title="Sort by Group Name">Grupo ↕️</div>
+            <div class="header-cell group-col" id="name_sort_header" style="cursor: pointer;" title="Sort by Group Name">Grupo</div>
             <div class="header-cell select-col">
 
             </div>
             <div class="header-cell filename-col">Archivo</div>
             <div class="header-cell datetime-col">Fecha Modificación</div>
-            <div class="header-cell size-col" id="size_sort_header" style="cursor: pointer;" title="Sort by Size">Tamaño ↕️</div>
+            <div class="header-cell size-col" id="size_sort_header" style="cursor: pointer;" title="Sort by Size">Tamaño</div>
         </div>
     """)
     
@@ -232,8 +232,11 @@ def create_tree_display(results, group_selections, individual_selections, finder
         if (sizeSortHeader) {
             sizeSortHeader.addEventListener('click', function() {
                 console.log('Size header clicked. Attempting to click hidden trigger.');
+                console.log('Attempting to find hidden size sort trigger button with id: hidden_size_sort_trigger');
                 const hiddenButton = document.getElementById('hidden_size_sort_trigger');
                 if (hiddenButton) {
+                    console.log('Found hidden size sort trigger button:', hiddenButton);
+                    console.log('Type of hidden size sort trigger button:', hiddenButton.tagName, hiddenButton.type);
                     // Gradio's way of finding the button might be different if it's just an elem_id.
                     // This attempts to find a button where the Gradio app might have put it.
                     // Often Gradio wraps elements or uses specific structures.
@@ -256,8 +259,11 @@ def create_tree_display(results, group_selections, individual_selections, finder
         if (nameSortHeader) {
             nameSortHeader.addEventListener('click', function() {
                 console.log('Name header clicked. Attempting to click hidden trigger.');
+                console.log('Attempting to find hidden name sort trigger button with id: hidden_name_sort_trigger');
                 const hiddenButton = document.getElementById('hidden_name_sort_trigger');
                 if (hiddenButton) {
+                    console.log('Found hidden name sort trigger button:', hiddenButton);
+                    console.log('Type of hidden name sort trigger button:', hiddenButton.tagName, hiddenButton.type);
                     hiddenButton.click();
                 } else {
                     console.error('Hidden name sort trigger button (id: hidden_name_sort_trigger) not found.');
