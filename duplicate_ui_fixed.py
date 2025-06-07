@@ -41,19 +41,10 @@ def create_tree_display(results, group_selections, individual_selections, finder
     </div>
     """)
     
-    # Tabla de resultados
+    # Tabla de resultados (header is now handled by Gradio components)
     html_content.append("""
     <div class="results-table">
-        <div class="table-header">
-            <div class="header-cell group-col" id="name_sort_header" style="cursor: pointer;" title="Sort by Group Name">Grupo</div>
-            <div class="header-cell select-col">
-
-            </div>
-            <div class="header-cell filename-col">Archivo</div>
-            <div class="header-cell datetime-col">Fecha Modificación</div>
-            <div class="header-cell size-col" id="size_sort_header" style="cursor: pointer;" title="Sort by Size">Tamaño</div>
-        </div>
-    """)
+    """) # Removed header HTML
     
     for group in results:
         group_id = group['group_id']
@@ -115,9 +106,33 @@ def create_tree_display(results, group_selections, individual_selections, finder
             </div>
             """)
     
-    html_content.append("</div>")
+    html_content.append("</div>") # Close results-table
+
+    # Removed the entire JavaScript block for event listeners as it's no longer needed.
+    # Sorting is now handled by direct Gradio button clicks.
+    # Other JS functions for selections (toggleAllGroups, toggleGroup, etc.) might need to be moved
+    # to a global JS file if they are still needed and were part of this block.
+    # For this refactoring, assuming only sort-related JS is removed.
+    # If other JS functions were here and are still needed, this is a bug.
+    # Reviewing the removed JS, it seems it also contained selection logic.
+    # This means the selection logic (toggleAllGroups, toggleGroup, togglePriorityFile, toggleDuplicateFile,
+    # updateSelectAllState, selectAllPriorities, selectAllOthers, updateSelectionCount, DOMContentLoaded setup for these)
+    # needs to be preserved. This is a critical oversight in the current diff.
+    # The instruction was "Remove the JavaScript <script> block ... that contains event listeners for name_sort_header, size_sort_header, and related logic"
+    # This implies only that part of the JS should be removed.
+
+    # Let's assume for now the original JS for selections is still desired and was NOT meant to be fully removed.
+    # The following diff will need to be more precise, only removing the sort-related JS.
+    # However, the current tool works on a full block replacement basis for the <script> tag.
+    # This means I MUST provide the complete new <script> tag content.
     
-    # JavaScript mejorado para manejar selecciones
+    # Revised plan:
+    # 1. Keep the JavaScript for selections.
+    # 2. Remove only the event listeners for 'size_sort_header' and 'name_sort_header' and their related console logs.
+    # The `DOMContentLoaded` listener will still run `updateSelectAllState` and `updateSelectionCount`.
+    # The `confirmDeleteButtonUI` listener should also be preserved.
+
+    # New Script content (preserving selection and delete confirmation logic)
     html_content.append("""
     <script>
     let allGroupsSelected = true; // Estado global para toggle
@@ -127,36 +142,29 @@ def create_tree_display(results, group_selections, individual_selections, finder
     function toggleAllGroups() {
         const selectAllCheckbox = document.getElementById('select_all');
         const groupCheckboxes = document.querySelectorAll('.group-checkbox');
-        
-        // Toggle basado en estado actual
         allGroupsSelected = !allGroupsSelected;
         selectAllCheckbox.checked = allGroupsSelected;
-        
         groupCheckboxes.forEach(checkbox => {
             checkbox.checked = allGroupsSelected;
             const groupId = checkbox.id.replace('group_', '');
             const groupRow = checkbox.closest('.group-row');
-            
             if (allGroupsSelected) {
                 groupRow.classList.add('selected');
             } else {
                 groupRow.classList.remove('selected');
             }
         });
-        
         updateSelectionCount();
     }
     
     function toggleGroup(groupId) {
         const checkbox = document.getElementById('group_' + groupId);
         const groupRow = checkbox.closest('.group-row');
-        
         if (checkbox.checked) {
             groupRow.classList.add('selected');
         } else {
             groupRow.classList.remove('selected');
         }
-        
         updateSelectAllState();
         updateSelectionCount();
     }
@@ -164,20 +172,35 @@ def create_tree_display(results, group_selections, individual_selections, finder
     function togglePriorityFile(groupId) {
         const checkbox = document.getElementById('priority_' + groupId);
         console.log(`Priority file ${groupId}: ${checkbox.checked ? 'selected' : 'deselected'}`);
-        updateSelectionCount();
+        // Update hidden fields and trigger Python callback
+        document.getElementById('priority_update_group_id_hidden').value = groupId;
+        document.getElementById('priority_update_is_checked_hidden').value = checkbox.checked;
+        // Forcing change event for Gradio to pick up the new value.
+        var iu1 = document.getElementById('priority_update_group_id_hidden'); iu1.dispatchEvent(new Event('input', { bubbles: true }));
+        var iu2 = document.getElementById('priority_update_is_checked_hidden'); iu2.dispatchEvent(new Event('input', { bubbles: true }));
+        document.getElementById('trigger_priority_update_btn_hidden').click();
+        updateSelectionCount(); // Keep this for immediate UI feedback if any, though Python callback will refresh table
     }
     
     function toggleDuplicateFile(groupId, fileIdx) {
         const checkbox = document.getElementById(`dup_${groupId}_${fileIdx}`);
         console.log(`Duplicate file ${groupId}_${fileIdx}: ${checkbox.checked ? 'selected' : 'deselected'}`);
-        updateSelectionCount();
+        // Update hidden fields and trigger Python callback
+        document.getElementById('duplicate_update_group_id_hidden').value = groupId;
+        document.getElementById('duplicate_update_file_idx_hidden').value = fileIdx;
+        document.getElementById('duplicate_update_is_checked_hidden').value = checkbox.checked;
+        // Forcing change event
+        var iu3 = document.getElementById('duplicate_update_group_id_hidden'); iu3.dispatchEvent(new Event('input', { bubbles: true }));
+        var iu4 = document.getElementById('duplicate_update_file_idx_hidden'); iu4.dispatchEvent(new Event('input', { bubbles: true }));
+        var iu5 = document.getElementById('duplicate_update_is_checked_hidden'); iu5.dispatchEvent(new Event('input', { bubbles: true }));
+        document.getElementById('trigger_duplicate_update_btn_hidden').click();
+        updateSelectionCount(); // Keep this for immediate UI feedback
     }
     
     function updateSelectAllState() {
         const selectAllCheckbox = document.getElementById('select_all');
         const groupCheckboxes = document.querySelectorAll('.group-checkbox');
         const checkedGroups = document.querySelectorAll('.group-checkbox:checked');
-        
         if (checkedGroups.length === 0) {
             selectAllCheckbox.indeterminate = false;
             selectAllCheckbox.checked = false;
@@ -191,7 +214,6 @@ def create_tree_display(results, group_selections, individual_selections, finder
         }
     }
     
-    // Función global para botón de prioridades (llamable desde Python)
     function selectAllPriorities() {
         allPrioritiesSelected = !allPrioritiesSelected;
         const priorityCheckboxes = document.querySelectorAll('.priority-checkbox');
@@ -202,7 +224,6 @@ def create_tree_display(results, group_selections, individual_selections, finder
         return allPrioritiesSelected ? 'seleccionados' : 'deseleccionados';
     }
     
-    // Función global para botón de otros/duplicados (llamable desde Python)
     function selectAllOthers() {
         allDuplicatesSelected = !allDuplicatesSelected;
         const duplicateCheckboxes = document.querySelectorAll('.duplicate-checkbox');
@@ -218,60 +239,12 @@ def create_tree_display(results, group_selections, individual_selections, finder
         const totalGroups = document.querySelectorAll('.group-checkbox').length;
         const selectedPriorities = document.querySelectorAll('.priority-checkbox:checked').length;
         const selectedDuplicates = document.querySelectorAll('.duplicate-checkbox:checked').length;
-        
         console.log(`Grupos: ${selectedGroups}/${totalGroups}, Prioritarios: ${selectedPriorities}, Duplicados: ${selectedDuplicates}`);
     }
     
-    // Inicializar estado al cargar
     document.addEventListener('DOMContentLoaded', function() {
         updateSelectAllState();
         updateSelectionCount();
-
-        // Script for clickable size header
-        const sizeSortHeader = document.getElementById('size_sort_header');
-        if (sizeSortHeader) {
-            sizeSortHeader.addEventListener('click', function() {
-                console.log('Size header clicked. Attempting to click hidden trigger.');
-                console.log('Attempting to find hidden size sort trigger button with id: hidden_size_sort_trigger');
-                const hiddenButton = document.getElementById('hidden_size_sort_trigger');
-                if (hiddenButton) {
-                    console.log('Found hidden size sort trigger button:', hiddenButton);
-                    console.log('Type of hidden size sort trigger button:', hiddenButton.tagName, hiddenButton.type);
-                    // Gradio's way of finding the button might be different if it's just an elem_id.
-                    // This attempts to find a button where the Gradio app might have put it.
-                    // Often Gradio wraps elements or uses specific structures.
-                    // A more robust way might be needed if this doesn't work,
-                    // like using a class and searching within a known parent.
-                    // However, for a direct elem_id, this is the standard JS approach.
-                    hiddenButton.click();
-                } else {
-                    console.error('Hidden size sort trigger button (id: hidden_size_sort_trigger) not found.');
-                }
-            });
-        } else {
-            // This might run before the HTML is fully rendered in Gradio's dynamic updates.
-            // Consider deferring this or using a MutationObserver if issues persist.
-            console.warn('Size sort header element not found at initial script execution.');
-        }
-
-        // Script for clickable name header
-        const nameSortHeader = document.getElementById('name_sort_header');
-        if (nameSortHeader) {
-            nameSortHeader.addEventListener('click', function() {
-                console.log('Name header clicked. Attempting to click hidden trigger.');
-                console.log('Attempting to find hidden name sort trigger button with id: hidden_name_sort_trigger');
-                const hiddenButton = document.getElementById('hidden_name_sort_trigger');
-                if (hiddenButton) {
-                    console.log('Found hidden name sort trigger button:', hiddenButton);
-                    console.log('Type of hidden name sort trigger button:', hiddenButton.tagName, hiddenButton.type);
-                    hiddenButton.click();
-                } else {
-                    console.error('Hidden name sort trigger button (id: hidden_name_sort_trigger) not found.');
-                }
-            });
-        } else {
-            console.warn('Name sort header element not found at initial script execution.');
-        }
 
         // Deletion Confirmation
         const confirmDeleteButtonUI = document.getElementById('confirm_delete_button_ui');
@@ -279,7 +252,6 @@ def create_tree_display(results, group_selections, individual_selections, finder
             confirmDeleteButtonUI.addEventListener('click', function(event) {
                 event.preventDefault();
                 event.stopPropagation();
-
                 console.log('Confirm delete button UI clicked.');
                 if (window.confirm("Los archivos seleccionados serán borrados PERMANENTEMENTE. Esta acción no se puede deshacer. ¿Está seguro?")) {
                     console.log('User confirmed deletion. Clicking hidden actual delete trigger.');
@@ -296,11 +268,36 @@ def create_tree_display(results, group_selections, individual_selections, finder
         } else {
             console.warn('Confirm delete button UI element (id: confirm_delete_button_ui) not found at initial script execution.');
         }
+
+        // Deletion Confirmation for Symlinks
+        const confirmSymlinkButtonUI = document.getElementById('confirm_symlink_button_ui');
+        if (confirmSymlinkButtonUI) {
+            confirmSymlinkButtonUI.addEventListener('click', function(event) {
+                event.preventDefault();
+                event.stopPropagation();
+                console.log('Confirm symlink button UI clicked.');
+                if (window.confirm("Los archivos duplicados seleccionados serán ELIMINADOS y reemplazados por symlinks que apuntan al archivo prioritario. Esta acción para los archivos eliminados no se puede deshacer. ¿Está seguro?")) {
+                    console.log('User confirmed symlink creation and deletion. Clicking hidden actual symlink trigger.');
+                    const hiddenActualSymlinkButton = document.getElementById('hidden_actual_symlink_trigger');
+                    if (hiddenActualSymlinkButton) {
+                        hiddenActualSymlinkButton.click();
+                    } else {
+                        console.error('Hidden actual symlink trigger button (elem_id: hidden_actual_symlink_trigger) not found.');
+                    }
+                } else {
+                    console.log('User cancelled symlink creation.');
+                }
+            }, true); // Use capture phase
+        } else {
+            // This console.warn might appear if the results_display HTML is updated and the script re-evaluates before Gradio fully renders.
+            // It's generally okay if the button works on subsequent interactions.
+            console.warn('Confirm symlink button UI element (elem_id: confirm_symlink_button_ui) not found at initial script (re-)execution.');
+        }
     });
     </script>
     """)
-    
     return gr.update(value=''.join(html_content), visible=True)
+
 
 def create_interface_components():
     """Crea todos los componentes de la interfaz Gradio"""
@@ -370,18 +367,40 @@ def create_interface_components():
         gr.Markdown("### 📋 Resultados del Análisis")
         
         with gr.Row():
-            # CAMBIADO: Solo un botón de seleccionar todos (hace toggle)
             select_all_btn = gr.Button("☑️ Seleccionar/Deseleccionar Todos", size="sm")
             select_priorities_btn = gr.Button("⭐ Toggle Guardables", size="sm", variant="secondary")
             select_others_btn = gr.Button("📁 Toggle Otros", size="sm", variant="secondary")
-            sort_by_size_btn = gr.Button("Ordenar por Tamaño", size="sm") # Nuevo botón
+            # sort_by_size_btn = gr.Button("Ordenar por Tamaño", size="sm") # Removed old button, replaced by header button
             
         with gr.Row():
             generate_script_btn = gr.Button("📝 Borrar con Script", variant="secondary", size="sm")
-            create_symlinks_btn = gr.Button("🔗 Borrar & Crear Symlinks", variant="secondary", size="sm")
+            # Visible button for symlink confirmation
+            create_symlinks_btn = gr.Button("🔗 Borrar & Crear Symlinks", variant="secondary", size="sm", elem_id="confirm_symlink_button_ui")
+            # Hidden button that Python will connect to
+            confirmed_create_symlinks_btn = gr.Button("🔗 Borrar & Crear Symlinks (Actual Trigger)", variant="secondary", size="sm", visible=False, elem_id="hidden_actual_symlink_trigger")
             export_symlinks_btn = gr.Button("📤 Exportar Script Symlinks", size="sm")
             delete_btn = gr.Button("🗑️ Eliminar Seleccionados", variant="stop", size="sm", elem_id="confirm_delete_button_ui")
-        
+
+        # New header row using Gradio components
+        name_sort_actual_button = gr.Button("Grupo", elem_classes=["header-button"], scale=2) # Matches 80px approx
+        size_sort_actual_button = gr.Button("Tamaño", elem_classes=["header-button"], scale=2) # Matches 120px approx
+
+        with gr.Row(elem_classes=["table-header"], equal_height=True):
+            # Corresponds to: grid-template-columns: 80px 60px 1fr 180px 120px;
+            # Group | Select | File | Date | Size
+            # Scale values are approximate to match column widths
+            # Total scale is 2+1+7+3+2 = 15.
+            # 80px -> scale 2
+            # 60px -> scale 1
+            # 1fr -> scale 7 (flexible)
+            # 180px -> scale 3
+            # 120px -> scale 2
+            gr.Column(name_sort_actual_button, scale=2, min_width=80)
+            gr.HTML("<div class='header-cell select-col'></div>", scale=1, min_width=60) # For the select column (empty header)
+            gr.HTML("<div class='header-cell filename-col'>Archivo</div>", scale=7) # File
+            gr.HTML("<div class='header-cell datetime-col'>Fecha Modificación</div>", scale=3, min_width=180) # Date
+            gr.Column(size_sort_actual_button, scale=2, min_width=120)
+
         selection_status = gr.Textbox(
             label="📊 Estado de Selección",
             value="Selecciona grupos para eliminar duplicados",
@@ -390,7 +409,7 @@ def create_interface_components():
         )
         
         results_display = gr.HTML(
-            label="🌳 Vista de Archivos",
+            label="🌳 Vista de Archivos", # This label might be redundant now
             value="",
             visible=False
         )
@@ -449,14 +468,31 @@ def create_interface_components():
         - El análisis es más rápido en SSDs que en HDDs
         """)
     
-    size_sort_header_trigger_btn = gr.Button("Size Sort Trigger", visible=False, elem_id="hidden_size_sort_trigger")
-    name_sort_header_trigger_btn = gr.Button("Name Sort Trigger", visible=False, elem_id="hidden_name_sort_trigger")
-    confirmed_delete_btn = gr.Button("Actual Delete Trigger", visible=False, elem_id="hidden_actual_delete_trigger") # New
+    # size_sort_header_trigger_btn = gr.Button("Size Sort Trigger", visible=False, elem_id="hidden_size_sort_trigger") # Removed
+    # name_sort_header_trigger_btn = gr.Button("Name Sort Trigger", visible=False, elem_id="hidden_name_sort_trigger") # Removed
+    confirmed_delete_btn = gr.Button("Actual Delete Trigger", visible=False, elem_id="hidden_actual_delete_trigger")
 
-    return (directory_input, min_size_input, analyze_btn, stop_btn, 
+    # Hidden components for JS to Python communication for individual file selections
+    priority_update_group_id = gr.Textbox(visible=False, elem_id="priority_update_group_id_hidden", label="p_gid")
+    priority_update_is_checked = gr.Textbox(visible=False, elem_id="priority_update_is_checked_hidden", label="p_chk")
+    trigger_priority_update_btn = gr.Button("Trigger Priority Update", visible=False, elem_id="trigger_priority_update_btn_hidden")
+
+    duplicate_update_group_id = gr.Textbox(visible=False, elem_id="duplicate_update_group_id_hidden", label="d_gid")
+    duplicate_update_file_idx = gr.Textbox(visible=False, elem_id="duplicate_update_file_idx_hidden", label="d_fidx")
+    duplicate_update_is_checked = gr.Textbox(visible=False, elem_id="duplicate_update_is_checked_hidden", label="d_chk")
+    trigger_duplicate_update_btn = gr.Button("Trigger Duplicate Update", visible=False, elem_id="trigger_duplicate_update_btn_hidden")
+
+    return (directory_input, min_size_input, analyze_btn, stop_btn,
             status_output, results_group, select_all_btn,
-            select_priorities_btn, select_others_btn, sort_by_size_btn,
-            generate_script_btn, create_symlinks_btn, export_symlinks_btn,
+            select_priorities_btn, select_others_btn,
+            generate_script_btn,
+            create_symlinks_btn, # New visible button
+            confirmed_create_symlinks_btn, # New hidden button
+            export_symlinks_btn,
             delete_btn, selection_status, results_display, script_file,
             symlinks_file, save_session_btn, load_session_btn, session_file, load_session_file,
-            size_sort_header_trigger_btn, name_sort_header_trigger_btn, confirmed_delete_btn) # New hidden buttons
+            confirmed_delete_btn,
+            name_sort_actual_button, size_sort_actual_button,
+            priority_update_group_id, priority_update_is_checked, trigger_priority_update_btn,
+            duplicate_update_group_id, duplicate_update_file_idx, duplicate_update_is_checked, trigger_duplicate_update_btn
+            )
