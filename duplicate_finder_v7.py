@@ -262,6 +262,7 @@ current_results = []
 group_selections = {}  # Para rastrear selecciones de grupos
 individual_selections = {}  # Para rastrear selecciones individuales
 sort_order_descending = True  # Para ordenar por tamaño
+sort_name_order_descending = True # Para ordenar por nombre de grupo
 
 def update_progress(progress, message):
     """Actualiza el progreso en la interfaz"""
@@ -678,6 +679,24 @@ def sort_results_by_size():
 
     return new_html_content, status_message
 
+def sort_results_by_name():
+    """Ordena los resultados por nombre de grupo (nombre del archivo prioritario) y actualiza la vista."""
+    global current_results, sort_name_order_descending, group_selections, individual_selections, finder, GPU_AVAILABLE
+    if not current_results:
+        return gr.update(value="No hay resultados para ordenar."), "No hay resultados para ordenar."
+
+    # Sort by the name of the priority file
+    current_results.sort(key=lambda x: Path(x['priority_file']['path']).name.lower(), reverse=sort_name_order_descending)
+
+    # Toggle for next click before generating status message
+    order_applied_message = 'descendente' if sort_name_order_descending else 'ascendente'
+    sort_name_order_descending = not sort_name_order_descending
+
+    status_message = f"Resultados ordenados por nombre de grupo ({order_applied_message})."
+
+    new_html_content = create_tree_display(current_results, group_selections, individual_selections, finder, GPU_AVAILABLE)
+    return new_html_content, status_message
+
 def create_interface():
     """Crea la interfaz Gradio"""
     custom_css = get_custom_css()
@@ -691,13 +710,14 @@ def create_interface():
         # Usar los componentes del módulo UI
         components = create_interface_components()
         
-	# Desempaquetar componentes - Actualizado para incluir sort_by_size_btn (22 elementos)
+	# Desempaquetar componentes - Actualizado para incluir confirmed_delete_btn (25 elementos)
         (directory_input, min_size_input, analyze_btn, stop_btn, 
          status_output, results_group, select_all_btn,
-         select_priorities_btn, select_others_btn, sort_by_size_btn, # Botón añadido
+         select_priorities_btn, select_others_btn, sort_by_size_btn,
          generate_script_btn, create_symlinks_btn, export_symlinks_btn,
          delete_btn, selection_status, results_display, script_file,
-         symlinks_file, save_session_btn, load_session_btn, session_file, load_session_file) = components
+         symlinks_file, save_session_btn, load_session_btn, session_file, load_session_file,
+         size_sort_header_trigger_btn, name_sort_header_trigger_btn, confirmed_delete_btn) = components # Tres botones ocultos al final
         
         # Event handlers
         analyze_btn.click(
@@ -748,7 +768,10 @@ def create_interface():
             outputs=[symlinks_file]
         )
         
-        delete_btn.click(
+        # Original delete_btn click handler is removed.
+        # The visible delete_btn now triggers JS confirmation first.
+
+        confirmed_delete_btn.click( # This is the new hidden button
             fn=delete_selected_files,
             outputs=[selection_status]
         )
@@ -775,6 +798,16 @@ def create_interface():
 
         sort_by_size_btn.click(
             fn=sort_results_by_size,
+            outputs=[results_display, status_output]
+        )
+
+        size_sort_header_trigger_btn.click(
+            fn=sort_results_by_size,
+            outputs=[results_display, status_output]
+        )
+
+        name_sort_header_trigger_btn.click(
+            fn=sort_results_by_name,
             outputs=[results_display, status_output]
         )
     

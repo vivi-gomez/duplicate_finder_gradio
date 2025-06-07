@@ -45,13 +45,13 @@ def create_tree_display(results, group_selections, individual_selections, finder
     html_content.append("""
     <div class="results-table">
         <div class="table-header">
-            <div class="header-cell group-col">Grupo</div>
+            <div class="header-cell group-col" id="name_sort_header" style="cursor: pointer;" title="Sort by Group Name">Grupo ↕️</div>
             <div class="header-cell select-col">
 
             </div>
             <div class="header-cell filename-col">Archivo</div>
             <div class="header-cell datetime-col">Fecha Modificación</div>
-            <div class="header-cell size-col">Tamaño</div>
+            <div class="header-cell size-col" id="size_sort_header" style="cursor: pointer;" title="Sort by Size">Tamaño ↕️</div>
         </div>
     """)
     
@@ -226,6 +226,70 @@ def create_tree_display(results, group_selections, individual_selections, finder
     document.addEventListener('DOMContentLoaded', function() {
         updateSelectAllState();
         updateSelectionCount();
+
+        // Script for clickable size header
+        const sizeSortHeader = document.getElementById('size_sort_header');
+        if (sizeSortHeader) {
+            sizeSortHeader.addEventListener('click', function() {
+                console.log('Size header clicked. Attempting to click hidden trigger.');
+                const hiddenButton = document.getElementById('hidden_size_sort_trigger');
+                if (hiddenButton) {
+                    // Gradio's way of finding the button might be different if it's just an elem_id.
+                    // This attempts to find a button where the Gradio app might have put it.
+                    // Often Gradio wraps elements or uses specific structures.
+                    // A more robust way might be needed if this doesn't work,
+                    // like using a class and searching within a known parent.
+                    // However, for a direct elem_id, this is the standard JS approach.
+                    hiddenButton.click();
+                } else {
+                    console.error('Hidden size sort trigger button (id: hidden_size_sort_trigger) not found.');
+                }
+            });
+        } else {
+            // This might run before the HTML is fully rendered in Gradio's dynamic updates.
+            // Consider deferring this or using a MutationObserver if issues persist.
+            console.warn('Size sort header element not found at initial script execution.');
+        }
+
+        // Script for clickable name header
+        const nameSortHeader = document.getElementById('name_sort_header');
+        if (nameSortHeader) {
+            nameSortHeader.addEventListener('click', function() {
+                console.log('Name header clicked. Attempting to click hidden trigger.');
+                const hiddenButton = document.getElementById('hidden_name_sort_trigger');
+                if (hiddenButton) {
+                    hiddenButton.click();
+                } else {
+                    console.error('Hidden name sort trigger button (id: hidden_name_sort_trigger) not found.');
+                }
+            });
+        } else {
+            console.warn('Name sort header element not found at initial script execution.');
+        }
+
+        // Deletion Confirmation
+        const confirmDeleteButtonUI = document.getElementById('confirm_delete_button_ui');
+        if (confirmDeleteButtonUI) {
+            confirmDeleteButtonUI.addEventListener('click', function(event) {
+                event.preventDefault();
+                event.stopPropagation();
+
+                console.log('Confirm delete button UI clicked.');
+                if (window.confirm("Los archivos seleccionados serán borrados PERMANENTEMENTE. Esta acción no se puede deshacer. ¿Está seguro?")) {
+                    console.log('User confirmed deletion. Clicking hidden actual delete trigger.');
+                    const hiddenActualDeleteButton = document.getElementById('hidden_actual_delete_trigger');
+                    if (hiddenActualDeleteButton) {
+                        hiddenActualDeleteButton.click();
+                    } else {
+                        console.error('Hidden actual delete trigger button not found.');
+                    }
+                } else {
+                    console.log('User cancelled deletion.');
+                }
+            }, true); // Use capture phase
+        } else {
+            console.warn('Confirm delete button UI element (id: confirm_delete_button_ui) not found at initial script execution.');
+        }
     });
     </script>
     """)
@@ -310,7 +374,7 @@ def create_interface_components():
             generate_script_btn = gr.Button("📝 Borrar con Script", variant="secondary", size="sm")
             create_symlinks_btn = gr.Button("🔗 Borrar & Crear Symlinks", variant="secondary", size="sm")
             export_symlinks_btn = gr.Button("📤 Exportar Script Symlinks", size="sm")
-            delete_btn = gr.Button("🗑️ Eliminar Seleccionados", variant="stop", size="sm")
+            delete_btn = gr.Button("🗑️ Eliminar Seleccionados", variant="stop", size="sm", elem_id="confirm_delete_button_ui")
         
         selection_status = gr.Textbox(
             label="📊 Estado de Selección",
@@ -379,9 +443,14 @@ def create_interface_components():
         - El análisis es más rápido en SSDs que en HDDs
         """)
     
+    size_sort_header_trigger_btn = gr.Button("Size Sort Trigger", visible=False, elem_id="hidden_size_sort_trigger")
+    name_sort_header_trigger_btn = gr.Button("Name Sort Trigger", visible=False, elem_id="hidden_name_sort_trigger")
+    confirmed_delete_btn = gr.Button("Actual Delete Trigger", visible=False, elem_id="hidden_actual_delete_trigger") # New
+
     return (directory_input, min_size_input, analyze_btn, stop_btn, 
             status_output, results_group, select_all_btn,
-            select_priorities_btn, select_others_btn, sort_by_size_btn, # Botón añadido
+            select_priorities_btn, select_others_btn, sort_by_size_btn,
             generate_script_btn, create_symlinks_btn, export_symlinks_btn,
             delete_btn, selection_status, results_display, script_file,
-            symlinks_file, save_session_btn, load_session_btn, session_file, load_session_file)
+            symlinks_file, save_session_btn, load_session_btn, session_file, load_session_file,
+            size_sort_header_trigger_btn, name_sort_header_trigger_btn, confirmed_delete_btn) # New hidden buttons
