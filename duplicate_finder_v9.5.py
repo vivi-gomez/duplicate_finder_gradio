@@ -697,6 +697,63 @@ def sort_results_by_name():
     new_html_content = create_tree_display(current_results, group_selections, individual_selections, finder, GPU_AVAILABLE)
     return new_html_content, status_message
 
+def update_priority_selection_py(group_id_str: str, is_checked_str: str):
+    global individual_selections, current_results, group_selections, finder, GPU_AVAILABLE
+    try:
+        group_id = int(group_id_str)
+        is_checked = is_checked_str.lower() == 'true'
+
+        if group_id in individual_selections:
+            individual_selections[group_id]['priority'] = is_checked
+            logger.info(f"Updated priority selection for group {group_id} to {is_checked}")
+        else:
+            # This case might happen if individual_selections is not fully populated when results are first loaded.
+            # Or if group_id is somehow incorrect.
+            # Initialize if missing:
+            individual_selections[group_id] = {'priority': is_checked, 'duplicates': []}
+            # We might need to know the number of duplicate files to initialize 'duplicates' correctly,
+            # but for priority selection, this might be acceptable.
+            # A more robust way would be to ensure individual_selections is always complete.
+            logger.warning(f"Group ID {group_id} not initially in individual_selections. Initialized for priority update.")
+
+        tree_html = create_tree_display(current_results, group_selections, individual_selections, finder, GPU_AVAILABLE)
+        selected_files_count = get_selected_files_count()
+        selection_summary = f"{selected_files_count} archivos seleccionados para eliminar."
+
+        return tree_html, selection_summary
+    except Exception as e:
+        logger.error(f"Error in update_priority_selection_py: {e}")
+        tree_html = create_tree_display(current_results, group_selections, individual_selections, finder, GPU_AVAILABLE)
+        return tree_html, str(e)
+
+def update_duplicate_selection_py(group_id_str: str, file_idx_str: str, is_checked_str: str):
+    global individual_selections, current_results, group_selections, finder, GPU_AVAILABLE
+    try:
+        group_id = int(group_id_str)
+        file_idx = int(file_idx_str)
+        is_checked = is_checked_str.lower() == 'true'
+
+        if group_id in individual_selections:
+            if file_idx < len(individual_selections[group_id]['duplicates']):
+                individual_selections[group_id]['duplicates'][file_idx] = is_checked
+                logger.info(f"Updated duplicate selection for group {group_id}, index {file_idx} to {is_checked}")
+            else:
+                logger.warning(f"File index {file_idx} out of bounds for group ID {group_id} duplicate update.")
+        else:
+            # Similar to priority, initialize if group_id is missing.
+            # This is less likely for duplicates as it implies a structural issue.
+            logger.warning(f"Group ID {group_id} not found in individual_selections for duplicate update.")
+            # We cannot safely initialize 'duplicates' here without knowing its correct length.
+
+        tree_html = create_tree_display(current_results, group_selections, individual_selections, finder, GPU_AVAILABLE)
+        selected_files_count = get_selected_files_count()
+        selection_summary = f"{selected_files_count} archivos seleccionados para eliminar."
+        return tree_html, selection_summary
+    except Exception as e:
+        logger.error(f"Error in update_duplicate_selection_py: {e}")
+        tree_html = create_tree_display(current_results, group_selections, individual_selections, finder, GPU_AVAILABLE)
+        return tree_html, str(e)
+
 def create_interface():
     """Crea la interfaz Gradio"""
     custom_css = get_custom_css()
@@ -710,14 +767,21 @@ def create_interface():
         # Usar los componentes del módulo UI
         components = create_interface_components()
         
-	# Desempaquetar componentes - Actualizado para incluir confirmed_delete_btn (25 elementos)
+        # Desempaquetar componentes - Actualizado para la nueva estructura (31 + 1 new hidden symlink button = 32 componentes)
         (directory_input, min_size_input, analyze_btn, stop_btn, 
          status_output, results_group, select_all_btn,
-         select_priorities_btn, select_others_btn, sort_by_size_btn,
-         generate_script_btn, create_symlinks_btn, export_symlinks_btn,
+         select_priorities_btn, select_others_btn,
+         generate_script_btn,
+         create_symlinks_btn, # This is the new visible button (confirm_symlink_button_ui)
+         confirmed_create_symlinks_btn, # This is the new hidden button (hidden_actual_symlink_trigger)
+         export_symlinks_btn,
          delete_btn, selection_status, results_display, script_file,
          symlinks_file, save_session_btn, load_session_btn, session_file, load_session_file,
-         size_sort_header_trigger_btn, name_sort_header_trigger_btn, confirmed_delete_btn) = components # Tres botones ocultos al final
+         confirmed_delete_btn,
+         name_sort_actual_button, size_sort_actual_button,
+         priority_update_group_id, priority_update_is_checked, trigger_priority_update_btn,
+         duplicate_update_group_id, duplicate_update_file_idx, duplicate_update_is_checked, trigger_duplicate_update_btn
+         ) = components
         
         # Event handlers
         analyze_btn.click(
@@ -755,7 +819,9 @@ def create_interface():
             outputs=[script_file]
         )
         
-        create_symlinks_btn.click(
+        # The visible create_symlinks_btn (confirm_symlink_button_ui) now only triggers JS.
+        # The Python click handler is moved to the new hidden button:
+        confirmed_create_symlinks_btn.click(
             fn=create_symlinks,
             outputs=[selection_status]
         )
@@ -796,19 +862,28 @@ def create_interface():
             outputs=[status_output, results_display, results_group]
         )
 
-        sort_by_size_btn.click(
-            fn=sort_results_by_size,
-            outputs=[results_display, status_output]
-        )
+        # Removed click handlers for sort_by_size_btn, size_sort_header_trigger_btn, and name_sort_header_trigger_btn
 
-        size_sort_header_trigger_btn.click(
-            fn=sort_results_by_size,
-            outputs=[results_display, status_output]
-        )
-
-        name_sort_header_trigger_btn.click(
+        # Add new click handlers for the actual header buttons
+        name_sort_actual_button.click(
             fn=sort_results_by_name,
             outputs=[results_display, status_output]
+        )
+        size_sort_actual_button.click(
+            fn=sort_results_by_size,
+            outputs=[results_display, status_output]
+        )
+
+        # Click handlers for individual file selection updates
+        trigger_priority_update_btn.click(
+            fn=update_priority_selection_py,
+            inputs=[priority_update_group_id, priority_update_is_checked],
+            outputs=[results_display, selection_status]
+        )
+        trigger_duplicate_update_btn.click(
+            fn=update_duplicate_selection_py,
+            inputs=[duplicate_update_group_id, duplicate_update_file_idx, duplicate_update_is_checked],
+            outputs=[results_display, selection_status]
         )
     
     return interface
