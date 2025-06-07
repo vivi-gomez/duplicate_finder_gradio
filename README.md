@@ -1,4 +1,3 @@
-# duplicate_finder_gradio
 Aplicación GRADIO para localizar archivos duplicados por hash o nombre, mediante GPU
 
 
