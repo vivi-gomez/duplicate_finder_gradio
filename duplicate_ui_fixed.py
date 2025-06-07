@@ -396,7 +396,7 @@ def create_interface_components():
             # 180px -> scale 3
             # 120px -> scale 2
             gr.Column(name_sort_actual_button, scale=2, min_width=80)
-            gr.HTML("<div class='header-cell select-col'></div>", scale=1, min_width=60) # For the select column (empty header)
+            gr.Column(gr.HTML("<div class='header-cell select-col'></div>"), scale=1, min_width=60) # For the select column (empty header)
             gr.HTML("<div class='header-cell filename-col'>Archivo</div>", scale=7) # File
             gr.HTML("<div class='header-cell datetime-col'>Fecha Modificación</div>", scale=3, min_width=180) # Date
             gr.Column(size_sort_actual_button, scale=2, min_width=120)
