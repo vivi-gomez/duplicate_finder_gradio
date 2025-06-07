@@ -75,8 +75,11 @@ class DuplicateFinderGPU:
             if self.stop_flag:
                 return {}
                 
-            if file_path.is_file():
+            if file_path.is_file() and not file_path.is_symlink():
                 try:
+                    # For regular files, stat() follows symlinks by default.
+                    # However, we've excluded symlinks above.
+                    # So, this will only be called on actual files.
                     stat = file_path.stat()
                     size = stat.st_size
                     if size >= self.min_size:
