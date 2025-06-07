@@ -1,5 +1,5 @@
 # duplicate_finder_gradio
-Aplicación GRADIO para localizar archivos duplicados por hash mediante GPU
+Aplicación GRADIO para localizar archivos duplicados por hash o nombre, mediante GPU
 
 
 # 🔍 Detector de Archivos Duplicados GPU - Setup
@@ -7,9 +7,11 @@ Aplicación GRADIO para localizar archivos duplicados por hash mediante GPU
 ## Requisitos del Sistema
 
 - **Python 3.8+**
-- **NVIDIA GPU** (RTX 3090 recomendada)
+- **NVIDIA GPU**
 - **CUDA 12.x** instalado
 - **Linux/Windows** (probado en Ubuntu 20.04+)
+
+![Screenshot from 2025-06-07 08-24-44](https://github.com/user-attachments/assets/93a171d7-71bb-45d9-952c-332fd8534d8a)
 
 ## Instalación
 
