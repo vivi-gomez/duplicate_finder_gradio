@@ -1,7 +1,8 @@
+
+# 🔍 Detector de Archivos Duplicados GPU - Setup
 Aplicación GRADIO para localizar archivos duplicados por hash o nombre, mediante GPU
 
 
-# 🔍 Detector de Archivos Duplicados GPU - Setup
 
 ## Requisitos del Sistema
 
