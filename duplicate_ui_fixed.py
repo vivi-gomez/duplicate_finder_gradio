@@ -307,8 +307,8 @@ def create_interface_components():
             sort_by_size_btn = gr.Button("Ordenar por Tamaño", size="sm") # Nuevo botón
             
         with gr.Row():
-            generate_script_btn = gr.Button("📝 Generar Script", variant="secondary", size="sm")
-            create_symlinks_btn = gr.Button("🔗 Crear Symlinks", variant="secondary", size="sm")
+            generate_script_btn = gr.Button("📝 Borrar con Script", variant="secondary", size="sm")
+            create_symlinks_btn = gr.Button("🔗 Borrar & Crear Symlinks", variant="secondary", size="sm")
             export_symlinks_btn = gr.Button("📤 Exportar Script Symlinks", size="sm")
             delete_btn = gr.Button("🗑️ Eliminar Seleccionados", variant="stop", size="sm")
         
