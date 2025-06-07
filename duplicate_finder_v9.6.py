@@ -2,7 +2,7 @@
 """
 Detector de archivos duplicados con interfaz Gradio
 Optimizado para GPU NVIDIA
-Vista en árbol con selección de archivos duplicados - VERSIÓN 9.5
+Vista en árbol con selección de archivos duplicados - VERSIÓN 9.6
 Con funcionalidad de guardar/cargar sesiones
 """
 
@@ -601,7 +601,7 @@ def save_session():
         'results': current_results,
         'group_selections': group_selections,
         'individual_selections': individual_selections,
-        'version': '7.0'
+        'version': '9.6'
     }
     
     # Convertir Path objects a strings para JSON
@@ -890,7 +890,7 @@ def create_interface():
 
 def main():
     """Función principal"""
-    print("🔍 Detector de Archivos Duplicados GPU - Versión 7")
+    print("🔍 Detector de Archivos Duplicados GPU - Versión 9.6")
     print("=" * 60)
     print(f"🚀 Aceleración GPU: {'Disponible' if GPU_AVAILABLE else 'No disponible'}")
     print("🌐 Iniciando interfaz Gradio...")
