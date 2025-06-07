@@ -2,7 +2,7 @@
 """
 Detector de archivos duplicados con interfaz Gradio
 Optimizado para GPU NVIDIA
-Vista en árbol con selección de archivos duplicados - VERSIÓN 7
+Vista en árbol con selección de archivos duplicados - VERSIÓN 9
 Con funcionalidad de guardar/cargar sesiones
 """
 
