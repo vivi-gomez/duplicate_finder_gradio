@@ -47,7 +47,7 @@ def create_tree_display(results, group_selections, individual_selections, finder
         <div class="table-header">
             <div class="header-cell group-col">Grupo</div>
             <div class="header-cell select-col">
-                <input type="checkbox" id="select_all" onchange="toggleAllGroups()" title="Seleccionar/Deseleccionar todos los grupos">
+
             </div>
             <div class="header-cell filename-col">Archivo</div>
             <div class="header-cell datetime-col">Fecha Modificación</div>
@@ -304,6 +304,7 @@ def create_interface_components():
             select_all_btn = gr.Button("☑️ Seleccionar/Deseleccionar Todos", size="sm")
             select_priorities_btn = gr.Button("⭐ Toggle Guardables", size="sm", variant="secondary")
             select_others_btn = gr.Button("📁 Toggle Otros", size="sm", variant="secondary")
+            sort_by_size_btn = gr.Button("Ordenar por Tamaño", size="sm") # Nuevo botón
             
         with gr.Row():
             generate_script_btn = gr.Button("📝 Generar Script", variant="secondary", size="sm")
@@ -380,7 +381,7 @@ def create_interface_components():
     
     return (directory_input, min_size_input, analyze_btn, stop_btn, 
             status_output, results_group, select_all_btn,
-            select_priorities_btn, select_others_btn, generate_script_btn, 
-            create_symlinks_btn, export_symlinks_btn, delete_btn, 
-            selection_status, results_display, script_file, symlinks_file,
-            save_session_btn, load_session_btn, session_file, load_session_file)
+            select_priorities_btn, select_others_btn, sort_by_size_btn, # Botón añadido
+            generate_script_btn, create_symlinks_btn, export_symlinks_btn,
+            delete_btn, selection_status, results_display, script_file,
+            symlinks_file, save_session_btn, load_session_btn, session_file, load_session_file)
