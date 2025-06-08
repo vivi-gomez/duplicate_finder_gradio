@@ -374,4 +374,28 @@ def get_custom_css():
             color: #a0aec0;
         }
     }
+
+    /* New class for header buttons */
+    .header-button {
+        background: transparent !important;
+        border: none !important;
+        color: white !important; /* Assuming dark header background */
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 1rem 0.75rem !important; /* Match .header-cell padding */
+        box-shadow: none !important;
+        text-align: center;
+        /* Ensure it behaves like a flex item if its parent is a flex container */
+        /* display: flex; */ /* Uncomment if needed, depends on Gradio's button structure */
+        /* align-items: center; */
+        /* justify-content: center; */
+        min-width: 0 !important; /* Override Gradio's default min-width for buttons */
+        border-radius: 0 !important; /* Override Gradio's default border-radius */
+    }
+    .header-button:hover {
+        background: rgba(255, 255, 255, 0.1) !important; /* Subtle hover for feedback */
+        transform: none !important; /* No translate on hover */
+        box-shadow: none !important; /* No shadow on hover */
+    }
     """
