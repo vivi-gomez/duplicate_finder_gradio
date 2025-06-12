@@ -305,7 +305,7 @@ def load_session(uploaded_file_obj):
         return (f"❌ Error cargando sesión: {str(e)}", gr.update(visible=False), "", gr.update(visible=False))
 
 def setup_callbacks(interface, analyze_btn, stop_btn, select_all_btn, refresh_btn,
-                    generate_script_btn, delete_btn, save_session_btn, load_session_file_input,
+                    generate_script_btn, delete_btn, save_session_btn, load_session_file,
                     directory_input, min_size_input, status_output, results_group,
                     results_display, selection_status, script_file_output, session_file_output,
                     checkbox_dummy_btn_for_event):
@@ -323,9 +323,9 @@ def setup_callbacks(interface, analyze_btn, stop_btn, select_all_btn, refresh_bt
     delete_btn.click(fn=delete_selected_files, outputs=[selection_status]) # Consider also updating results_display
     save_session_btn.click(fn=save_session, outputs=[session_file_output, selection_status])
 
-    load_session_file_input.upload(
+    load_session_file.upload(
         fn=load_session,
-        inputs=[load_session_file_input],
+        inputs=[load_session_file],
         outputs=[status_output, results_group, results_display, results_display]
     )
 
